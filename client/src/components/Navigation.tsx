@@ -1,13 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useTheme } from "@/hooks/useTheme";
+import SearchModal from "@/components/SearchModal";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { theme, toggleTheme } = useTheme();
 
   const navItems = [
     { href: "/", label: "ACCUEIL" },
@@ -101,6 +101,18 @@ export default function Navigation() {
     setActiveDropdown(null);
   };
 
+  // Handle Escape key to close search
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && searchOpen) {
+        setSearchOpen(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [searchOpen]);
+
   return (
     <nav className="fixed top-0 w-full z-50 glass" data-testid="main-navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -131,7 +143,7 @@ export default function Navigation() {
                   <div className={`flex items-center font-medium transition-colors duration-300 cursor-pointer ${
                     isActive(item.href) 
                       ? "text-neon-blue text-glow" 
-                      : "text-white dark:text-white light:text-gray-700 hover:text-neon-blue"
+                      : "text-white hover:text-neon-blue"
                   }`}>
                     {item.label}
                     {item.hasDropdown && (
@@ -149,7 +161,7 @@ export default function Navigation() {
                   >
                     {item.subItems.map((subItem) => (
                       <Link key={subItem.href} href={subItem.href} onClick={closeDropdown}>
-                        <div className="px-4 py-2 text-white dark:text-white light:text-gray-700 hover:text-neon-blue hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-black/10 transition-colors duration-200 cursor-pointer text-sm">
+                        <div className="px-4 py-2 text-white hover:text-neon-blue hover:bg-white/10 transition-colors duration-200 cursor-pointer text-sm">
                           {subItem.label}
                         </div>
                       </Link>
@@ -159,19 +171,14 @@ export default function Navigation() {
               </div>
             ))}
             
-            {/* Theme Toggle */}
-            <button 
-              onClick={toggleTheme}
-              className="text-white dark:text-white light:text-gray-700 hover:text-neon-blue transition-colors duration-300" 
-              data-testid="theme-toggle"
-              title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
-            >
-              <i className={`fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'} text-lg`}></i>
-            </button>
-            
             {/* Search Icon */}
-            <button className="text-white dark:text-white light:text-gray-700 hover:text-neon-blue transition-colors duration-300" data-testid="search-button">
-              <i className="fas fa-search text-lg"></i>
+            <button 
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="text-white hover:text-neon-blue transition-colors duration-300" 
+              data-testid="search-button"
+              title="Rechercher dans le site"
+            >
+              <i className={`fas ${searchOpen ? 'fa-times' : 'fa-search'} text-lg`}></i>
             </button>
           </div>
           
@@ -187,6 +194,9 @@ export default function Navigation() {
           </div>
         </div>
 
+        {/* Search Modal */}
+        <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden glass-blue mt-2 rounded-lg p-4" data-testid="mobile-menu">
@@ -201,7 +211,7 @@ export default function Navigation() {
                     <div className={`font-medium transition-colors duration-300 cursor-pointer ${
                       isActive(item.href) 
                         ? "text-neon-blue text-glow" 
-                        : "text-white dark:text-white light:text-gray-700 hover:text-neon-blue"
+                        : "text-white hover:text-neon-blue"
                     }`}>
                       {item.label}
                       {item.hasDropdown && (
@@ -219,7 +229,7 @@ export default function Navigation() {
                           href={subItem.href}
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          <div className="text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-neon-blue transition-colors duration-200 cursor-pointer text-sm py-1">
+                          <div className="text-gray-300 hover:text-neon-blue transition-colors duration-200 cursor-pointer text-sm py-1">
                             • {subItem.label}
                           </div>
                         </Link>
