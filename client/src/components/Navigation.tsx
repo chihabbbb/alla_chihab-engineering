@@ -4,15 +4,71 @@ import { Link, useLocation } from "wouter";
 export default function Navigation() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const navItems = [
     { href: "/", label: "ACCUEIL" },
-    { href: "/apropos", label: "À PROPOS", hasDropdown: true },
-    { href: "/activites", label: "NOS ACTIVITÉS" },
-    { href: "/projets", label: "PROJETS", hasDropdown: true },
+    { 
+      href: "/apropos", 
+      label: "À PROPOS", 
+      hasDropdown: true,
+      subItems: [
+        { href: "/apropos/histoire", label: "Notre histoire" },
+        { href: "/apropos/equipe", label: "Notre équipe" },
+        { href: "/apropos/bureaux", label: "Nos bureaux" },
+        { href: "/apropos/outils", label: "Nos outils" },
+        { href: "/apropos/plateforme", label: "Plateforme d'échange" }
+      ]
+    },
+    { 
+      href: "/activites", 
+      label: "NOS ACTIVITÉS",
+      hasDropdown: true,
+      subItems: [
+        { href: "/activites/equipement-technique", label: "Équipement technique du bâtiment" },
+        { href: "/activites/optimisation-energetique", label: "Optimisation énergétique" },
+        { href: "/activites/energie-durable", label: "Énergie et construction durable" },
+        { href: "/activites/pilotage-projets", label: "Pilotage de projets" },
+        { href: "/activites/complementaires", label: "Activités complémentaires" }
+      ]
+    },
+    { 
+      href: "/projets", 
+      label: "PROJETS", 
+      hasDropdown: true,
+      subItems: [
+        { href: "/projets/alimentaire", label: "Alimentaire" },
+        { href: "/projets/centrales-energie", label: "Centrales d'Énergie" },
+        { href: "/projets/commerce", label: "Commerce" },
+        { href: "/projets/datacenter", label: "Datacenter & Télécommunications" },
+        { href: "/projets/education", label: "Éducation" },
+        { href: "/projets/administration", label: "Immeuble administratif" },
+        { href: "/projets/industrie", label: "Industrie" },
+        { href: "/projets/logement", label: "Logement" },
+        { href: "/projets/soins", label: "Maison de soins" }
+      ]
+    },
     { href: "/actualites", label: "ACTUALITÉS" },
-    { href: "/jobs", label: "JOBS" },
-    { href: "/contact", label: "CONTACT" },
+    { 
+      href: "/jobs", 
+      label: "JOBS",
+      hasDropdown: true,
+      subItems: [
+        { href: "/jobs/postes-ouverts", label: "Postes ouverts" },
+        { href: "/jobs/candidatures", label: "Candidatures spontanées" },
+        { href: "/jobs/stages", label: "Stages" }
+      ]
+    },
+    { 
+      href: "/contact", 
+      label: "CONTACT",
+      hasDropdown: true,
+      subItems: [
+        { href: "/contact", label: "Nos coordonnées" },
+        { href: "/contact/bureaux", label: "Guidage vers nos bureaux" },
+        { href: "/contact/transport", label: "Venir en bus" }
+      ]
+    },
   ];
 
   const isActive = (href: string) => {
@@ -40,7 +96,12 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              <div key={item.href} className="relative group">
+              <div 
+                key={item.href} 
+                className="relative group"
+                onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.label)}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
                 <Link href={item.href} data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
                   <div className={`flex items-center font-medium transition-colors duration-300 cursor-pointer ${
                     isActive(item.href) 
@@ -53,6 +114,19 @@ export default function Navigation() {
                     )}
                   </div>
                 </Link>
+                
+                {/* Dropdown Menu */}
+                {item.hasDropdown && item.subItems && activeDropdown === item.label && (
+                  <div className="absolute top-full left-0 mt-2 w-64 glass-blue rounded-lg shadow-xl z-50 py-2">
+                    {item.subItems.map((subItem) => (
+                      <Link key={subItem.href} href={subItem.href}>
+                        <div className="px-4 py-2 text-white hover:text-neon-blue hover:bg-white/10 transition-colors duration-200 cursor-pointer text-sm">
+                          {subItem.label}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             
@@ -79,20 +153,41 @@ export default function Navigation() {
           <div className="md:hidden glass-blue mt-2 rounded-lg p-4" data-testid="mobile-menu">
             <div className="flex flex-col space-y-4">
               {navItems.map((item) => (
-                <Link 
-                  key={item.href} 
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid={`mobile-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-                >
-                  <div className={`font-medium transition-colors duration-300 cursor-pointer ${
-                    isActive(item.href) 
-                      ? "text-neon-blue text-glow" 
-                      : "text-white hover:text-neon-blue"
-                  }`}>
-                    {item.label}
-                  </div>
-                </Link>
+                <div key={item.href}>
+                  <Link 
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid={`mobile-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <div className={`font-medium transition-colors duration-300 cursor-pointer ${
+                      isActive(item.href) 
+                        ? "text-neon-blue text-glow" 
+                        : "text-white hover:text-neon-blue"
+                    }`}>
+                      {item.label}
+                      {item.hasDropdown && (
+                        <i className="fas fa-chevron-down ml-1 text-xs"></i>
+                      )}
+                    </div>
+                  </Link>
+                  
+                  {/* Mobile Submenus */}
+                  {item.hasDropdown && item.subItems && (
+                    <div className="ml-4 mt-2 space-y-2">
+                      {item.subItems.map((subItem) => (
+                        <Link 
+                          key={subItem.href} 
+                          href={subItem.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <div className="text-gray-300 hover:text-neon-blue transition-colors duration-200 cursor-pointer text-sm py-1">
+                            • {subItem.label}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
