@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const navItems = [
     { href: "/", label: "ACCUEIL" },
@@ -76,6 +77,28 @@ export default function Navigation() {
     return location.startsWith(href);
   };
 
+  const handleMouseEnter = (label: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setActiveDropdown(label);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 150); // 150ms delay
+  };
+
+  const closeDropdown = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setActiveDropdown(null);
+  };
+
   return (
     <nav className="fixed top-0 w-full z-50 glass" data-testid="main-navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -99,8 +122,8 @@ export default function Navigation() {
               <div 
                 key={item.href} 
                 className="relative group"
-                onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.label)}
-                onMouseLeave={() => setActiveDropdown(null)}
+                onMouseEnter={() => item.hasDropdown && handleMouseEnter(item.label)}
+                onMouseLeave={handleMouseLeave}
               >
                 <Link href={item.href} data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
                   <div className={`flex items-center font-medium transition-colors duration-300 cursor-pointer ${
@@ -117,9 +140,13 @@ export default function Navigation() {
                 
                 {/* Dropdown Menu */}
                 {item.hasDropdown && item.subItems && activeDropdown === item.label && (
-                  <div className="absolute top-full left-0 mt-2 w-64 glass-blue rounded-lg shadow-xl z-50 py-2">
+                  <div 
+                    className="absolute top-full left-0 mt-2 w-64 glass-blue rounded-lg shadow-xl z-50 py-2"
+                    onMouseEnter={() => handleMouseEnter(item.label)}
+                    onMouseLeave={handleMouseLeave}
+                  >
                     {item.subItems.map((subItem) => (
-                      <Link key={subItem.href} href={subItem.href}>
+                      <Link key={subItem.href} href={subItem.href} onClick={closeDropdown}>
                         <div className="px-4 py-2 text-white hover:text-neon-blue hover:bg-white/10 transition-colors duration-200 cursor-pointer text-sm">
                           {subItem.label}
                         </div>
