@@ -55,6 +55,11 @@ export default function Navigation() {
                 </Link>
               </div>
             ))}
+            
+            {/* Search Icon */}
+            <button className="text-white hover:text-neon-blue transition-colors duration-300" data-testid="search-button">
+              <i className="fas fa-search text-lg"></i>
+            </button>
           </div>
           
           {/* Mobile menu button */}
